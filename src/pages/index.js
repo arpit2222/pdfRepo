@@ -1,118 +1,230 @@
-import Image from 'next/image'
-import { Inter } from 'next/font/google'
+// import { Inter } from 'next/font/google'
+// import { usePDF } from 'react-to-pdf';
+// import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+// import axios from 'axios';
+// import { useEffect, useRef, useState } from 'react';
+// const inter = Inter({ subsets: ['latin'] })
 
-const inter = Inter({ subsets: ['latin'] })
+// export default function Home() {
+
+// const { toPDF, targetRef } = usePDF({filename: 'page.pdf'});
+// const additionalContentRef = useRef();
+// const [crimeData, setCrimeData] = useState(null);
+// const [data, setData] = useState([]);
+// const [selectedOption, setSelectedOption] = useState();
+
+// const handleDownloadPDF = () => {
+//   // Call toPDF on targetRef with the additional content
+//   toPDF(targetRef, additionalContentRef);
+// };
+
+// useEffect(() => {
+//   // Make the Axios GET request when the component mounts
+//   axios.get("https://api.usa.gov/crime/fbi/cde/arrest/state/AK/all?from=2015&to=2020&API_KEY=iiHnOKfno2Mgkt5AynpvPpUQTEyxE77jo1RU8PIv")
+//     .then((response) => {
+//       // Assuming the response data is in JSON format
+//       console.log(response.data.keys[0])
+//       setCrimeData(response.data.data);
+//       setData(response.data.keys)
+//       setSelectedOption(response.data.keys[0])
+//     })
+//     .catch((error) => {
+//       console.error('Error fetching data:', error);
+//     });
+// }, []);
+
+// const handleOptionChange = (e) => {
+//   setSelectedOption(e.target.value);
+// };
+
+//   return (
+//     <main
+//       className={`flex min-h-screen flex-col items-center justify-between ${inter.className}`}
+//     >
+//       <p className='text-[28px]'>Pdf generator</p>
+//       <div>
+//           <select value={selectedOption} onChange={handleOptionChange} className='border-black border-[1px] rounded'>
+//             {data.map((option, index) => (
+//               <option key={index} value={option}>
+//                 {option}
+//               </option>
+//             ))}
+//           </select>
+//         </div>
+//      <button onClick={handleDownloadPDF}>Download PDF</button>
+//          <div ref={targetRef} className='pt-10 px-12 border-2 border-red-300'>
+//           <div className='bg-[#E8EEFB] pt-4  rounded-[16px]'>
+//             <p className='text-[#1463FF] ml-4 mb-2'>{selectedOption}</p>
+//            <div className='bg-[#F2F4F5] p-8 rounded-b-[16px] flex '>
+//             <div className='my-auto -rotate-90 -ml-8'>
+//               Arrests
+//             </div>
+//             <div className=' bg-white rounded-[12px]'>
+//               <LineChart width={600} height={300} data={crimeData} margin={{ top: 20, right: 24, bottom: 20, left: 0 }}>
+//                 <XAxis dataKey="data_year" />
+//                 <YAxis />
+//                 <CartesianGrid stroke="#eee" horizontal={true} />
+//                 <Line type="monotone" dataKey={selectedOption} stroke="#8884d8" />
+//                 <Tooltip />
+//               </LineChart>
+//               </div>
+//             </div>
+//             </div>
+//          </div>
+//     </main>
+//   )
+// }
+
+import React, { useRef, useEffect, useState } from 'react';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+import ReactDOMServer from 'react-dom/server'; // Import the server-side rendering library
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
+import axios from 'axios';
+
+import { Inter } from 'next/font/google';
+
+const inter = Inter({ subsets: ['latin'] });
 
 export default function Home() {
-  return (
-    <main
-      className={`flex min-h-screen flex-col items-center justify-between p-24 ${inter.className}`}
-    >
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/pages/index.js</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+  const targetRef = useRef();
+  const [crimeData, setCrimeData] = useState(null);
+  const [data, setData] = useState([]);
+  const [selectedOption, setSelectedOption] = useState();
+  const [currentDate, setCurrentDate] = useState(new Date());
+
+  useEffect(() => {
+    axios
+      .get(
+        "https://api.usa.gov/crime/fbi/cde/arrest/state/AK/all?from=2015&to=2020&API_KEY=iiHnOKfno2Mgkt5AynpvPpUQTEyxE77jo1RU8PIv"
+      )
+      .then((response) => {
+        console.log(response.data.keys[0]);
+        setCrimeData(response.data.data);
+        setData(response.data.keys);
+        setSelectedOption(response.data.keys[0]);
+      })
+      .catch((error) => {
+        console.error("Error fetching data:", error);
+      });
+  }, []);
+
+  const handleOptionChange = (e) => {
+    setSelectedOption(e.target.value);
+  };
+
+  // Define your complex UI components as React components
+  const MyHeader = () => {
+    return (
+      <div className=' w-[190px]'>
+        <div className="flex justify-between mb-2 ">
+          <p style={{ fontSize: '4px' }}>RealAssist.Ai</p>
+          <p style={{ fontSize: '4px' }}>123 Main Street, Dover, NH 03820-4667</p>
+        </div>
+        <hr class="w-full border-none bg-blue-400 h-[2px]"></hr>
+      </div>
+    );
+  };
+  
+  const MyFooter = () => {
+    
+    return (
+      <div className=' w-[190px]'>
+        <hr class="w-full border-none bg-blue-400 h-[2px]"></hr>
+        <div className="flex justify-between">
+          <p style={{ fontSize: '4px' }}>{currentDate.toLocaleDateString()}</p>
+          <p style={{ fontSize: '4px' }}>RealAssist Property Report</p>
         </div>
       </div>
+    );
+  };
 
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700/10 after:dark:from-sky-900 after:dark:via-[#0141ff]/40 before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
+ const handleDownloadPDF = () => {
+  const footerHeight = 10; // Footer height
+  const pdf = new jsPDF('p', 'mm', 'a4');
+  let currentIndex = 0; // Track the current index in the data array
+
+  const addPageWithHeaderFooter = (key, index) => {
+    // Convert React components to HTML using ReactDOMServer
+    const headerHTML = ReactDOMServer.renderToStaticMarkup(<MyHeader />);
+    const footerHTML = ReactDOMServer.renderToStaticMarkup(<MyFooter />);
+
+    // Create a new chart for the current key
+    const currentKey = key;
+    setSelectedOption(currentKey);
+
+    // Add a new chart for the current key
+    const chartNode = targetRef.current;
+    html2canvas(chartNode)
+      .then((chartCanvas) => {
+        const chartImgData = chartCanvas.toDataURL('image/png');
+        pdf.addPage();
+        pdf.html(headerHTML, {
+          x: 5,
+          w: pdf.internal.pageSize.width - 20, // Set the width to match the page width minus 20mm for padding
+        });
+        // Add the captured image in the middle
+        pdf.addImage(chartImgData, 'PNG', 10, 20, pdf.internal.pageSize.width - 20, 0);
+
+        // Add footer component at the bottom
+        pdf.html(footerHTML, {
+          x: 5,
+          y: pdf.internal.pageSize.height - footerHeight - 20,
+          w: pdf.internal.pageSize.width - 20, // Set the width to match the page width minus 20mm for padding
+          callback: function () {
+            if (index < data.length - 1) {
+              // Continue to the next key
+              addPageWithHeaderFooter(data[index + 1], index + 1);
+            } else {
+              // If all keys have been processed, save the PDF
+              pdf.save('page.pdf');
+            }
+          },
+        });
+      })
+      .catch((error) => {
+        console.error('Error capturing chart:', error);
+      });
+  };
+
+  // Start the process with the first key in the data array
+  addPageWithHeaderFooter(data[currentIndex], currentIndex);
+};
+
+  
+  
+  
+
+  return (
+    <main className={`flex min-h-screen flex-col items-center justify-between ${inter.className}`}>
+      <p className="text-[28px] mb-2">Pdf generator</p>
+      <div>
+        <select value={selectedOption} onChange={handleOptionChange} className="border-black border-[1px] rounded">
+          {data.map((option, index) => (
+            <option key={index} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
       </div>
-
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Discover and deploy boilerplate example Next.js&nbsp;projects.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
+      <button onClick={handleDownloadPDF}>Download PDF</button>
+      <div ref={targetRef} className="pt-10">
+        <div className="bg-[#E8EEFB] pt-4  rounded-[16px]">
+          <p className="text-[#1463FF] ml-4 mb-2">{selectedOption}</p>
+          <div className="bg-[#F2F4F5] p-8 rounded-b-[16px] flex ">
+            <div className="my-auto -rotate-90 -ml-8">Arrests</div>
+            <div className="bg-white rounded-[12px]">
+              <LineChart width={600} height={300} data={crimeData} margin={{ top: 20, right: 24, bottom: 20, left: 0 }}>
+                <XAxis dataKey="data_year" />
+                <YAxis />
+                <CartesianGrid stroke="#eee" horizontal={true} />
+                <Line type="monotone" dataKey={selectedOption} stroke="#8884d8" />
+                <Tooltip />
+              </LineChart>
+            </div>
+          </div>
+        </div>
       </div>
     </main>
-  )
+  );
 }
