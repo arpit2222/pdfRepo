@@ -126,14 +126,14 @@ export default function Home() {
     );
   };
   
-  const MyFooter = () => {
+  const MyFooter = ({ pageNumber }) => {
     
     return (
       <div className=' w-[190px]'>
         <hr class="w-full border-none bg-blue-400 h-[2px]"></hr>
         <div className="flex justify-between">
           <p style={{ fontSize: '4px' }}>{currentDate.toLocaleDateString()}</p>
-          <p style={{ fontSize: '4px' }}>RealAssist Property Report</p>
+          <p style={{ fontSize: '4px' }}>Showing Page {1} of {data.length+1}</p>
         </div>
       </div>
     );
@@ -147,7 +147,7 @@ export default function Home() {
   const addPageWithHeaderFooter = (key, index) => {
     // Convert React components to HTML using ReactDOMServer
     const headerHTML = ReactDOMServer.renderToStaticMarkup(<MyHeader />);
-    const footerHTML = ReactDOMServer.renderToStaticMarkup(<MyFooter />);
+    const footerHTML = ReactDOMServer.renderToStaticMarkup(<MyFooter pageNumebr={currentIndex} />);
 
     // Create a new chart for the current key
     const currentKey = key;
@@ -207,7 +207,7 @@ export default function Home() {
           ))}
         </select>
       </div>
-      <button onClick={handleDownloadPDF}>Download PDF</button>
+      <button onClick={handleDownloadPDF}>Download PDF </button>
       <div ref={targetRef} className="pt-10">
         <div className="bg-[#E8EEFB] pt-4  rounded-[16px]">
           <p className="text-[#1463FF] ml-4 mb-2">{selectedOption}</p>
